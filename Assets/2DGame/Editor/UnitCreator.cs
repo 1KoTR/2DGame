@@ -1,7 +1,6 @@
 using UnityEditor;
 using UnityEngine;
 using static UnityEditor.EditorGUILayout;
-using static UnityEditor.Progress;
 
 public enum UnitType
 {
@@ -17,9 +16,9 @@ public enum UnitTag
     Enemy
 }
 
-public sealed class UnitCreator : EditorWindow
+public sealed class UnitCreator : CustomEditorWindow
 {
-    [MenuItem("GameObject/2D Object/Unit...")]
+    [MenuItem("GameObject/2D Object/Unit")]
     public static void Init()
     {
         GetWindow<UnitCreator>("Create Unit");
@@ -28,8 +27,6 @@ public sealed class UnitCreator : EditorWindow
     #region Constants
     private const float START_END_SPACE = 1;
     private const float FIELD_SPACE = 4;
-
-    private const int MAX_COUNT = 10;
 
     private const string Body = nameof(Body);
     private const string Weapon = nameof(Weapon);
@@ -40,16 +37,15 @@ public sealed class UnitCreator : EditorWindow
 
     private UnitType _type = UnitType.None;
 
-    private Sprite _sprite;
-
     private string _name = "New Unit";
     private UnitTag _tag = UnitTag.Enemy;
-
-    private int _weaponCount = 1;
-    private int _engineCount = 1;
+    private Sprite _sprite = null;
 
     private bool _isShowSettings = false;
     private bool _isShowAdvancedSettings = false;
+
+    private AirplaneConfig _airplaneConfig;
+    private TurretConfig _turretConfig;
 
     public void OnGUI()
     {
@@ -77,41 +73,66 @@ public sealed class UnitCreator : EditorWindow
         EndFoldoutHeaderGroup();
         #endregion
 
+        ScriptableObject config = null;
         #region Advanced Settings
         _isShowAdvancedSettings = BeginFoldoutHeaderGroup(_isShowAdvancedSettings, $"{type} Advanced Settings");
         if (_isShowAdvancedSettings)
         {
             BeginVerticalBox();
-            _weaponCount = IntSlider("Weapon Count", _weaponCount, 1, MAX_COUNT);
             switch (_type)
             {
+                #region Airplane
                 case UnitType.Airplane:
-                case UnitType.Tank:
-                    _engineCount = IntSlider("Engine Count", _engineCount, 1, MAX_COUNT);
+                    _airplaneConfig = (AirplaneConfig)ObjectField("Config", _airplaneConfig, typeof(AirplaneConfig), false);
+                    if (_airplaneConfig == null)
+                        break;
+                    // ...
+                    config = _airplaneConfig;
                     break;
+                #endregion
+
+                #region Turret
+                case UnitType.Turret:
+                    _turretConfig = (TurretConfig)ObjectField("Config", _turretConfig, typeof(TurretConfig), false);
+                    if (_turretConfig == null)
+                        break;
+                    FieldSpace();
+                    // ...
+                    config = _airplaneConfig;
+                    break;
+                #endregion
+
+                #region Tank
+                case UnitType.Tank:
+                    // ...
+                    break;
+                #endregion
             }
             EndVerticalBox();
         }
         EndFoldoutHeaderGroup();
         #endregion
 
+        #region CreateButton
         if (_sprite != null &&
             _name != "" &&
+            config != null &&
             GUILayout.Button("Create"))
         {
             CreateUnit();
         }
+        #endregion
     }
 
-    private void ResetOptions()
+    private protected override void ResetOptions()
     {
         _name = "New Unit";
         _sprite = null;
         _tag = UnitTag.Enemy;
-        _weaponCount = 1;
-        _engineCount = 1;
-        _isShowSettings = false;
+        _isShowSettings = true;
         _isShowAdvancedSettings = false;
+        _airplaneConfig = null;
+        _turretConfig = null;
     }
 
     private void CreateUnit()
@@ -119,8 +140,8 @@ public sealed class UnitCreator : EditorWindow
         var go = new GameObject(_name);
 
         var goTransform = go.transform;
-
         var tag = GetEnumName(_tag);
+
         go.tag = tag;
         AddBody(goTransform);
         AddWeapon(goTransform);
@@ -129,6 +150,40 @@ public sealed class UnitCreator : EditorWindow
             case UnitType.Airplane:
             case UnitType.Tank:
                 AddEngine(goTransform);
+                break;
+        }
+
+        switch (_tag)
+        {
+            case UnitTag.Player:
+                switch (_type)
+                {
+                    case UnitType.Airplane:
+                        go.AddComponent<AirplaneView>();
+                        go.AddComponent<PlayerAirplaneController>();
+                        go.GetComponent<PlayerAirplaneController>().config = _airplaneConfig;
+                        break;
+                    case UnitType.Turret:
+                        // ...
+                        break;
+                    case UnitType.Tank:
+                        // ...
+                        break;
+                }
+                break;
+            case UnitTag.Enemy:
+                switch (_type)
+                {
+                    case UnitType.Airplane:
+                        // ...
+                        break;
+                    case UnitType.Turret:
+                        // ...
+                        break;
+                    case UnitType.Tank:
+                        // ...
+                        break;
+                }
                 break;
         }
 
@@ -158,20 +213,4 @@ public sealed class UnitCreator : EditorWindow
         var goEngine = new GameObject(Engine);
         goEngine.transform.parent = parentTransform;
     }
-
-    private void FieldSpace() =>
-        Space(FIELD_SPACE);
-    private void BeginVerticalBox()
-    {
-        BeginVertical("box");
-        Space(START_END_SPACE);
-    }
-    private void EndVerticalBox()
-    {
-        Space(START_END_SPACE);
-        EndVertical();
-    }
-
-    private string GetEnumName<T>(T typeName)
-        => System.Enum.GetName(typeof(T), typeName);
 }

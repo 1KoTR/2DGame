@@ -3,7 +3,10 @@ guid: a75da677a7441c14d8582e9d5c41d242
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - m_ViewDataDictionary: {instanceID: 0}
+  - _defaultAirplaneConfig: {fileID: 11400000, guid: 1e1b035e1687a4e429a94321b90bde81, type: 2}
+  - _defaultTurretConfig: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
