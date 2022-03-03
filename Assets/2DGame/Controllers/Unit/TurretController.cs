@@ -1,23 +1,22 @@
-﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class AirplaneController : Controller
+public abstract class TurretController : Controller
 {
-    private protected AirplaneView _view;
+    private protected TurretView _view;
 
     private protected virtual void Awake()
     {
-        _view = GetComponent<AirplaneView>();
+        _view = GetComponent<TurretView>();
     }
 
     private protected override void Execute()
     {
-        Move();
         Rotate();
         Attack();
     }
 
-    private protected abstract void Move();
     private protected abstract void Rotate();
     private protected abstract void Attack();
 }

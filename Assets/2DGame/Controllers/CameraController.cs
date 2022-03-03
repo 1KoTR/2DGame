@@ -7,20 +7,20 @@ public sealed class CameraController : Controller
 {
     private const string Player = nameof(Player);
 
-    [SerializeField] private CameraConfig _config;
-
-    private void Start()
-    {
-        _config.targetTransform = GameObject.FindGameObjectWithTag(Player).transform;
-    }
+    private Transform _target;
 
     private protected override void Execute()
     {
         Move();
     }
 
+    private void Start()
+    {
+        _target = GameObject.FindGameObjectWithTag(Player).transform;
+    }
+
     private void Move()
     {
-        transform.position = _config.targetTransform.position + new Vector3(0, 0, -15);
+        transform.position = _target.position + new Vector3(0, 0, transform.position.z);
     }
 }

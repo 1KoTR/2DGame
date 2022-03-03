@@ -75,7 +75,20 @@ public class TileCreator : CustomEditorWindow
 
         var sr = go.GetComponent<SpriteRenderer>();
         sr.sprite = _sprite;
-        sr.sortingOrder = (int)_type;
+        int sortingOrder = -1;
+        switch (_type)
+        {
+            case TileType.Background:
+                sortingOrder = (int)SpriteOrder.Background;
+                break;
+            case TileType.Ground:
+                sortingOrder = (int)SpriteOrder.Ground;
+                break;
+            case TileType.Decoration:
+                sortingOrder = (int)SpriteOrder.Decoration;
+                break;
+        }
+        sr.sortingOrder = sortingOrder;
 
         var path = $"{SAVE_PATH}/{_type}/{_name}.prefab";
         path = AssetDatabase.GenerateUniqueAssetPath(path);

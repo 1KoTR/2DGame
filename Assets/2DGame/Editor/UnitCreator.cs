@@ -39,9 +39,11 @@ public sealed class UnitCreator : CustomEditorWindow
 
     private string _name = "New Unit";
     private UnitTag _tag = UnitTag.Enemy;
-    private Sprite _sprite = null;
+    private Sprite _bodySprite = null;
+    private Sprite _weaponSprite = null;
 
-    private bool _isShowSettings = false;
+    private bool _isShowSettings = true;
+    private bool _isShowSprites = false;
     private bool _isShowAdvancedSettings = false;
 
     private AirplaneConfig _airplaneConfig;
@@ -67,7 +69,14 @@ public sealed class UnitCreator : CustomEditorWindow
             BeginVerticalBox();
             _name = TextField("Name", _name);
             _tag = (UnitTag)EnumPopup("Tag", _tag);
-            _sprite = (Sprite)ObjectField("Sprite", _sprite, typeof(Sprite), false);
+            //_sprite = (Sprite)ObjectField("Sprite", _sprite, typeof(Sprite), false);
+            _isShowSprites = Foldout(_isShowSprites, "Sprites");
+            if (_isShowSprites)
+            {
+                _bodySprite = (Sprite)ObjectField("Body Sprite", _bodySprite, typeof(Sprite), false);
+                _weaponSprite = (Sprite)ObjectField("Weapon Sprite", _weaponSprite, typeof(Sprite), false);
+            }
+            EndFoldoutHeaderGroup();
             EndVerticalBox();
         }
         EndFoldoutHeaderGroup();
@@ -83,7 +92,13 @@ public sealed class UnitCreator : CustomEditorWindow
             {
                 #region Airplane
                 case UnitType.Airplane:
-                    _airplaneConfig = (AirplaneConfig)ObjectField("Config", _airplaneConfig, typeof(AirplaneConfig), false);
+                    _airplaneConfig = (PlayerAirplaneConfig)ObjectField
+                        (
+                            "Config", 
+                            _airplaneConfig, 
+                            typeof(PlayerAirplaneConfig), 
+                            false
+                        );
                     if (_airplaneConfig == null)
                         break;
                     // ...
@@ -93,12 +108,17 @@ public sealed class UnitCreator : CustomEditorWindow
 
                 #region Turret
                 case UnitType.Turret:
-                    _turretConfig = (TurretConfig)ObjectField("Config", _turretConfig, typeof(TurretConfig), false);
+                    _turretConfig = (EnemyTurretConfig)ObjectField
+                        (
+                            "Config", 
+                            _turretConfig, 
+                            typeof(EnemyTurretConfig),
+                            false
+                        );
                     if (_turretConfig == null)
                         break;
-                    FieldSpace();
                     // ...
-                    config = _airplaneConfig;
+                    config = _turretConfig;
                     break;
                 #endregion
 
@@ -114,7 +134,7 @@ public sealed class UnitCreator : CustomEditorWindow
         #endregion
 
         #region CreateButton
-        if (_sprite != null &&
+        if (_bodySprite != null &&
             _name != "" &&
             config != null &&
             GUILayout.Button("Create"))
@@ -127,9 +147,11 @@ public sealed class UnitCreator : CustomEditorWindow
     private protected override void ResetOptions()
     {
         _name = "New Unit";
-        _sprite = null;
+        _bodySprite = null;
+        _weaponSprite = null;
         _tag = UnitTag.Enemy;
         _isShowSettings = true;
+        _isShowSprites = false;
         _isShowAdvancedSettings = false;
         _airplaneConfig = null;
         _turretConfig = null;
@@ -161,7 +183,6 @@ public sealed class UnitCreator : CustomEditorWindow
                     case UnitType.Airplane:
                         go.AddComponent<AirplaneView>();
                         go.AddComponent<PlayerAirplaneController>();
-                        go.GetComponent<PlayerAirplaneController>().config = _airplaneConfig;
                         break;
                     case UnitType.Turret:
                         // ...
@@ -178,6 +199,8 @@ public sealed class UnitCreator : CustomEditorWindow
                         // ...
                         break;
                     case UnitType.Turret:
+                        go.AddComponent<TurretView>();
+                        go.AddComponent<EnemyTurretController>();
                         // ...
                         break;
                     case UnitType.Tank:
@@ -187,7 +210,7 @@ public sealed class UnitCreator : CustomEditorWindow
                 break;
         }
 
-        var path = $"{SAVE_PATH}/{tag}/{_name}.prefab";
+        var path = $"{SAVE_PATH}/{tag}/{_name}{GetEnumName(_tag)}{GetEnumName(_type)}.prefab";
         path = AssetDatabase.GenerateUniqueAssetPath(path);
         PrefabUtility.SaveAsPrefabAsset(go, path);
         DestroyImmediate(go);
@@ -197,16 +220,49 @@ public sealed class UnitCreator : CustomEditorWindow
     {
         var goBody = new GameObject(Body);
         goBody.transform.parent = parentTransform;
-        goBody.AddComponent<SpriteRenderer>();
 
+        goBody.AddComponent<SpriteRenderer>();
         var spriteRenderer = goBody.GetComponent<SpriteRenderer>();
-        spriteRenderer.sprite = _sprite;
-        spriteRenderer.sortingOrder = 10;
+        spriteRenderer.sprite = _bodySprite;
+        int sortingOrder = -1;
+        switch (_type)
+        {
+            case UnitType.Airplane:
+                sortingOrder = (int)SpriteOrder.AirplaneBody;
+                break;
+            case UnitType.Turret:
+                sortingOrder = (int)SpriteOrder.TurretBody;
+                break;
+            case UnitType.Tank:
+                sortingOrder = (int)SpriteOrder.TankBody;
+                break;
+        }
+        spriteRenderer.sortingOrder = sortingOrder;
     }
     private void AddWeapon(Transform parentTransform)
     {
         var goWeapon = new GameObject(Weapon);
         goWeapon.transform.parent = parentTransform;
+        if (_weaponSprite == null)
+            return;
+
+        goWeapon.AddComponent<SpriteRenderer>();
+        var spriteRenderer = goWeapon.GetComponent<SpriteRenderer>();
+        spriteRenderer.sprite = _weaponSprite;
+        int sortingOrder = -1;
+        switch (_type)
+        {
+            case UnitType.Airplane:
+                sortingOrder = (int)SpriteOrder.AirplaneWeapone;
+                break;
+            case UnitType.Turret:
+                sortingOrder = (int)SpriteOrder.TurretWeapon;
+                break;
+            case UnitType.Tank:
+                sortingOrder = (int)SpriteOrder.TankWeapon;
+                break;
+        }
+        spriteRenderer.sortingOrder = sortingOrder;
     }
     private void AddEngine(Transform parentTransform)
     {
