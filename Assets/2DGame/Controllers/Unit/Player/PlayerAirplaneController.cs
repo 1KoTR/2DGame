@@ -25,10 +25,16 @@ public sealed class PlayerAirplaneController : AirplaneController
             angle = 1;
         transform.Rotate(Vector3.back, angle * _config.rotateSpeed * Time.deltaTime);
     }
+    private float nextAttack = 0;
     private protected override void Attack()
     {
-        if (Input.GetKeyDown(KeyCode.Mouse0))
-            Debug.Log("Attack!");
+        var t = Time.time;
+        if (Input.GetKey(KeyCode.Mouse0) && t > nextAttack)
+        {
+            nextAttack = t + 1f / _config.attackRate;
+            var weaponTransform = _view.weapon.transform;
+            Instantiate(_config.bullet, weaponTransform.position, weaponTransform.rotation);
+        }
     }
 
 }

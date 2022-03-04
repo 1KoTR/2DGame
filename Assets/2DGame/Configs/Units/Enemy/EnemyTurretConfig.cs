@@ -5,5 +5,6 @@ public sealed class EnemyTurretConfig : TurretConfig
 {
     public Transform target = null;
 
-    public float attackDistance = 10;
+    public float rotateDistance = 8;
+    public float attackDistance = 6;
 }

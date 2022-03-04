@@ -9,12 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6f36306b0a7cd764fb88fafd527c3e0d, type: 3}
-  m_Name: StartingPlayerAirplane
+  m_Script: {fileID: 11500000, guid: 6ae1cb87ecef4d74ca9b3662573c6d47, type: 3}
+  m_Name: OrdinaryBullet
   m_EditorClassIdentifier: 
-  health: 100
-  bullet: {fileID: 2328956283556136891, guid: 56b5570b30400814b97d4ad9f432ef9a, type: 3}
-  damage: 15
-  attackRate: 3
-  moveSpeed: 3
-  rotateSpeed: 90
+  lifeTime: 5
+  moveSpeed: 15

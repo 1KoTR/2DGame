@@ -28,27 +28,29 @@ public sealed class EnemyTurretController : TurretController
 
     private protected override void Execute()
     {
-        if (Vector2.Distance(transform.position, _targetTransform.position) <= _config.attackDistance)
+        var distance = Vector2.Distance(_weaponTransform.position, _targetTransform.position);
+        if (distance < _config.rotateDistance)
         {
             Rotate();
-            Attack();
+            if (distance < _config.attackDistance)
+                Attack();
         }
     }
 
     private protected override void Rotate()
     {
-        var angle = Vector2.Angle(Vector2.right, _targetTransform.position - _weaponTransform.position);
-        _weaponTransform.eulerAngles = new Vector3
-            (
-                0, 0, 
-                (_weaponTransform.position.y < _targetTransform.position.y ? angle : -angle)
-                //* _config.rotateSpeed
-                //* Time.deltaTime
-            );
+        Vector2 rot = _targetTransform.position - _weaponTransform.position;
+        _weaponTransform.up = Vector2.MoveTowards(_weaponTransform.up, rot, _config.rotateSpeed * Time.deltaTime);
     }
+    private float nextAttack = 0;
     private protected override void Attack()
     {
-
+        var t = Time.time; 
+        if (t > nextAttack)
+        {
+            nextAttack = t + 1f / _config.attackRate;
+            Instantiate(_config.bullet, _weaponTransform.position, _weaponTransform.rotation);
+        }
     }
 
     void OnDrawGizmos()
@@ -56,5 +58,6 @@ public sealed class EnemyTurretController : TurretController
         var config = Resources.Load<EnemyTurretConfig>(name);
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, config.attackDistance);
+        Gizmos.DrawWireSphere(transform.position, config.rotateDistance);
     }
 }
